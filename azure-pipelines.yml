@@ -8,8 +8,8 @@ pool:
   
 # variables:
 #   imageName: 'javatest:$(Build.BuildId)'
-#   dockerId: 'setest'
-#   dockerPassword: 'LVR2B8=K9CDMPPNLeGiYUDYxBDKcsYLA'
+#   dockerId: ''
+#   dockerPassword: ''
   # define two more variables dockerId and dockerPassword in the build pipeline in UI
 
 steps:
