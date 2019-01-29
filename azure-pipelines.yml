@@ -5,18 +5,32 @@
 
 pool:
   vmImage: 'Ubuntu 16.04'
+  
+variables:
+  imageName: 'javatest:$(Build.BuildId)'
+  dockerId: 'setest'
+  dockerPassword: 'LVR2B8=K9CDMPPNLeGiYUDYxBDKcsYLA'
+  # define two more variables dockerId and dockerPassword in the build pipeline in UI
 
 steps:
+- task: InMobi-SoftwareExcellence.build-release-task.custom-build-release-task-1.InMobi_PR_ID_Check@0
+  displayName: 'Echo test'
+  inputs:
+    pr_id: 'test'
+
 - task: Maven@3
   inputs:
     mavenPomFile: 'pom.xml'
-    mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.10'
-    jdkArchitectureOption: 'x64'
+    # mavenOptions: '-Xmx3072m'
+    # javaHomeOption: 'JDKVersion'
+    # jdkVersionOption: '1.10'
+    # jdkArchitectureOption: 'x64'
     publishJUnitResults: true
     testResultsFiles: '**/TEST-*.xml'
     goals: 'package'
+    checkStyleRunAnalysis: true
+    pmdRunAnalysis: true
+    findBugsRunAnalysis: true
 
 # Publish Cobertura or JaCoCo code coverage results from a build
 - task: PublishCodeCoverageResults@1
@@ -26,12 +40,17 @@ steps:
     reportDirectory: '$(System.DefaultWorkingDirectory)/**/site/jacoco'
     failIfCoverageEmpty: true
 
-- task: CopyFiles@2
-  inputs:
-    contents: '**/*.war'
-    targetFolder: '$(build.artifactStagingDirectory)'
+- script: |
+    docker build -f Dockerfile -t $(dockerId).azurecr.io/$(imageName) .
+    docker login -u $(dockerId) -p $pswd $(dockerId).azurecr.io
+    docker push $(dockerId).azurecr.io/$(imageName)
+  env:
+    pswd: $(dockerPassword)
 
-- task: PublishBuildArtifacts@1
+- task: kasunkodagoda.slack-notification.slack-notification-task.SlackNotification@5
+  displayName: 'Post Slack Notification'
   inputs:
-    artifactName: 'war'
-    pathToPublish: '$(build.artifactStagingDirectory)'
+    SlackApiToken: 'xoxp-2168058097-514931879073-536195818438-38cdfecce3fe9fb9ca3854f146a4dd6b'
+    Channel: 'Dilip Reddy'
+    Message: 'Build - $(Build.BuildId) complete; Status: $(Agent.JobStatus)'
+  condition: succeededOrFailed()
