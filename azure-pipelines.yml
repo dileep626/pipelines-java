@@ -6,10 +6,10 @@
 pool:
   vmImage: 'Ubuntu 16.04'
   
-variables:
-  imageName: 'javatest:$(Build.BuildId)'
-  dockerId: 'setest'
-  dockerPassword: 'LVR2B8=K9CDMPPNLeGiYUDYxBDKcsYLA'
+# variables:
+#   imageName: 'javatest:$(Build.BuildId)'
+#   dockerId: 'setest'
+#   dockerPassword: 'LVR2B8=K9CDMPPNLeGiYUDYxBDKcsYLA'
   # define two more variables dockerId and dockerPassword in the build pipeline in UI
 
 steps:
@@ -21,10 +21,10 @@ steps:
 - task: Maven@3
   inputs:
     mavenPomFile: 'pom.xml'
-    # mavenOptions: '-Xmx3072m'
-    # javaHomeOption: 'JDKVersion'
-    # jdkVersionOption: '1.10'
-    # jdkArchitectureOption: 'x64'
+    mavenOptions: '-Xmx3072m'
+    javaHomeOption: 'JDKVersion'
+    jdkVersionOption: '1.10'
+    jdkArchitectureOption: 'x64'
     publishJUnitResults: true
     testResultsFiles: '**/TEST-*.xml'
     goals: 'package'
@@ -50,7 +50,8 @@ steps:
 - task: kasunkodagoda.slack-notification.slack-notification-task.SlackNotification@5
   displayName: 'Post Slack Notification'
   inputs:
-    SlackApiToken: 'xoxp-2168058097-514931879073-536195818438-38cdfecce3fe9fb9ca3854f146a4dd6b'
+    SlackApiToken: '$(slackToken)'
     Channel: 'Dilip Reddy'
     Message: 'Build - $(Build.BuildId) complete; Status: $(Agent.JobStatus)'
   condition: succeededOrFailed()
+
